@@ -1,6 +1,6 @@
 use std::error::Error;
-use std::fs::{self, File};
-use std::io::Write;
+use std::io::{ErrorKind, Error as IoError};
+// use chrono::format::Item;
 use clap::{Subcommand, Parser};
 use chrono::NaiveDate;
 
@@ -67,31 +67,34 @@ impl Commands {
                 
             },
             Commands::Remove{index} => {
+                let i = *index - 1;
+                let mut items = storage.load()?;
+                if i >= items.len() {
+                    return Err(Box::new(IoError::new(
+                        ErrorKind::InvalidInput,
+                        "Index out of bounds",
+                    )));
+                }
+                items.remove(i);
                 
-                let content = fs::read_to_string("list.txt").unwrap();
-                let mut new_content = String::from("");
-                if *index == 0 {
-                    return Err("indeces start at 1".into());
-                }
-                let count = content.lines().count();
-                let lines = if count < *index {
-                    return Err(format!("There is no item {index}").into());
-                } else {
-                    content.lines()
-                };
-                for (i, line) in lines.enumerate() {
-                    if *index != i+1 {
-                        new_content.push_str(
-                            if i+1 < count { format!("{line}\n")} else {format!("{line}")}
-                            .as_str());
-                    }
-                }
-                let mut file = File::create("list.txt")?;
-                write!(file, "{new_content}")?;
+                storage.save(&items)?;
                 println!("Removed item number {index}");
                 Ok(())
             },
             Commands::Complete{index} => {
+                let i = *index - 1;
+                let mut items = storage.load()?;
+                let item = items.get_mut(i);
+                match item {
+                    Some(item) => item.set_completed(true),
+                    None => {
+                        return Err(Box::new(IoError::new(
+                        ErrorKind::InvalidInput,
+                        "Index out of bounds",
+                        )))
+                    }
+                }
+                storage.save(&items)?;
                 println!("Marked item number {index} as completed");
                 Ok(())
             },

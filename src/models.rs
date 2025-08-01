@@ -19,6 +19,9 @@ impl TodoItem {
             completed: false,
         }
     }
+    pub fn set_completed(&mut self, b: bool) {
+        self.completed = b;
+    }
 }
 
 // struct TodoList {
