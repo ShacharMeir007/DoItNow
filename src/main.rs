@@ -7,8 +7,9 @@ use std::{process};
 // use action::Action;
 use clap::Parser;
 // use storage::FileStorage;
+use storage::SledStorage;
 
-use crate::storage::BinFileStorage;
+// use crate::storage::BinFileStorage;
 use action::Cli;
 
 
@@ -33,12 +34,14 @@ fn main() {
     //     }
     // };
     let cli = Cli::parse();
-    // let file_storage = FileStorage{};
-    let binary_file_storage = BinFileStorage{};
+    // let storage_device = FileStorage{};
+    // let storage_device = BinFileStorage{};
+    if let Ok(storage_device) = SledStorage::new() {
 
-    if let Err(e) = cli.command.execute(binary_file_storage){
-        println!("Application error: {e}");
-        process::exit(1);
+        if let Err(e) = cli.command.execute(storage_device){
+            println!("Application error: {e}");
+            process::exit(1);
+        }
     }
     // println!("{command} and {command_args:?}");
 }
